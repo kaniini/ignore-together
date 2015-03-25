@@ -75,9 +75,8 @@ class IgnoreRuleSet:
         def test_load_cb(payload):
             build_rules(yaml.load(payload))
         if weechat_is_fake:
-            d = None
             d = open(self.uri, 'r')
-            test_load_cb(d.read())
+            return test_load_cb(d.read())
 
     def install(self):
         [r.install() for r in self.rules]
