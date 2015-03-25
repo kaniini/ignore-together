@@ -1,5 +1,7 @@
 # ignore-together
 
+![Logo](logo.png)
+
 A distributed ignore list engine for IRC.
 
 The idea is essentially that there are users whose behaviours you'd rather not deal with,
