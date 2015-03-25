@@ -1,0 +1,22 @@
+# This is an example ignore-together ruleset, rulesets are written in a subset of YAML.
+# The top level is the name of the rule, rules have a set of zero or more "hostmasks" and
+# "accountnames".  A "rationale" field provides an explanation of what the ruleset does,
+# so the user may select or deselect the ruleset.
+
+"kaniini":
+  hostmasks:
+    - "*!*@mouse.dereferenced.org"
+    - "*!*kaniini@*.tu.ok.cox.net"
+  accountnames:
+    - "kaniini"
+  rationale: "self-important aggrandizing person, thinks rabbits shouldn't be murdered, disembowled and turned into dinner"
+
+"ramnet":
+  hostmasks:
+    - "*!*@*.gavlcmta01.gsvltx.tl.dh.suddenlink.net"
+  rationale: "uses 'well,' too frequently as a sentence starter"
+
+"Diablo-D3":
+  hostmasks:
+    - "*!*@exelion.net"
+  rationale: "too much paleo discussions"
