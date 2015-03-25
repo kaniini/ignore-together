@@ -16,4 +16,4 @@ for weechat.
 This example installs the script and loads my ruleset into the client.
 
     /script install ignore-together.py
-    /ignore-together add http://turtle.dereferenced.org/~kaniini/ignore-together-rules
+    /ignore-together add kaniini http://turtle.dereferenced.org/~kaniini/ignore-together-rules
