@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 
+import os
 import sys
 import yaml
 
@@ -11,7 +12,8 @@ except:
     class FakeWeechat:
         def command(self, cmd):
             print(cmd)
-     weechat = FakeWeechat()
+    weechat = FakeWeechat()
+    weechat_is_fake = True
 
 
 class IgnoreRule:
@@ -19,9 +21,10 @@ class IgnoreRule:
     This provides instrumentation for converting ignore rules into weechat filters.
     It handles both types of ignore-together ignore rules.
     """
-    def __init__(self, ignorelist, rulename, typename='ignore', hostmasks=[], accountnames=[], patterns=[]):
+    def __init__(self, ignorelist, rulename, rationale, typename='ignore', hostmasks=[], accountnames=[], patterns=[]):
         self.ignorelist = ignorelist
-        self.rulename = rulename
+        self.rulename = rulename.replace(' ', '_')
+        self.rationale = rationale
         self.typename = typename
         self.hostmasks = hostmasks
         self.accountnames = accountnames
@@ -33,14 +36,14 @@ class IgnoreRule:
         if self.typename == 'ignore':
             for pattern in self.hostmasks:
                 weechat.command('/filter add ignore-together.{ignorelist}.{rulename}.{ctr} irc.* * {pattern}'.format(
-                    ignorelist=self.ignorelist.name, rulename=self.rulename, ctr=subrule_ctr, pattern=pattern)
-                subrule_ctr++
+                    ignorelist=self.ignorelist.name, rulename=self.rulename, ctr=subrule_ctr, pattern=pattern))
+                subrule_ctr += 1
             # XXX - accountnames
         elif self.typename == 'message':
             for pattern in self.patterns:
                 weechat.command('/filter add ignore-together.{ignorelist}.{rulename}.{ctr} irc.* * {pattern}'.format(
-                    ignorelist=self.ignorelist.name, rulename=self.rulename, ctr=subrule_ctr, pattern=pattern)
-                subrule_ctr++
+                    ignorelist=self.ignorelist.name, rulename=self.rulename, ctr=subrule_ctr, pattern=pattern))
+                subrule_ctr += 1
 
     def uninstall(self):
         "Uninstall an ignore rule."
@@ -48,13 +51,13 @@ class IgnoreRule:
         if self.typename == 'ignore':
             for pattern in self.hostmasks:
                 weechat.command('/filter del ignore-together.{ignorelist}.{rulename}.{ctr}'.format(
-                    ignorelist=self.ignorelist.name, rulename=self.rulename, ctr=subrule_ctr)
-                subrule_ctr++
+                    ignorelist=self.ignorelist.name, rulename=self.rulename, ctr=subrule_ctr))
+                subrule_ctr += 1
         elif self.typename == 'message':
             for pattern in self.patterns:
                 weechat.command('/filter del ignore-together.{ignorelist}.{rulename}.{ctr}'.format(
-                    ignorelist=self.ignorelist.name, rulename=self.rulename, ctr=subrule_ctr)
-                subrule_ctr++
+                    ignorelist=self.ignorelist.name, rulename=self.rulename, ctr=subrule_ctr))
+                subrule_ctr += 1
 
 
 class IgnoreRuleSet:
@@ -63,4 +66,29 @@ class IgnoreRuleSet:
     def __init__(self, name, uri):
         self.name = name
         self.uri = uri
+        self.rules = []
 
+    def load(self):
+        def build_rules(s):
+            for k, v in s.items():
+                self.rules.append(IgnoreRule(self, k, v.get('rationale', '???'), v.get('type', 'ignore'), v.get('hostmasks', []), v.get('accountnames', []), v.get('patterns', [])))
+        def test_load_cb(payload):
+            build_rules(yaml.load(payload))
+        if weechat_is_fake:
+            d = None
+            d = open(self.uri, 'r')
+            test_load_cb(d.read())
+
+    def install(self):
+        [r.install() for r in self.rules]
+
+    def uninstall(self):
+        [r.uninstall() for r in self.rules]
+
+
+rules = {}
+
+if __name__ == '__main__':
+    rs = IgnoreRuleSet('example', 'example-ruleset.yml')
+    rs.load()
+    rs.install()
